@@ -10,20 +10,18 @@ between Neovim and tmux as if they were a single, unified window manager.
 
 Navigation works seamlessly across Neovim and tmux boundaries.
 The default navigation keys are:
-- `<C-h>` left
-- `<C-j>` down
-- `<C-k>` up
-- `<C-l>` right
+- `<C-h>` navigate left
+- `<C-j>` navigate down
+- `<C-k>` navigate up
+- `<C-l>` navigate right
 
-When any of these are pressed the plugin first attempts to move to an adjacent
-Neovim split. If there's no split in that direction, it automatically moves to
-the adjacent tmux pane instead. This creates a fluid navigation experience where
-you never have to think about whether you're navigating within Neovim or between
-tmux panes.
+These keybindings work seamlessly across Neovim and tmux boundaries, creating a
+fluid navigation experience where you never have to think about whether you're
+moving within Neovim or between tmux panes.
 
 ## Resizing
 
-This plugin implements an intuitive resizing experience that differs from stock Neovim and tmux behavior.
+This plugin implements an intuitive split resizing experience that differs from stock Neovim and tmux behavior.
 The default resizing keys are:
 - `<A-h>` grow left
 - `<A-j>` grow down
@@ -97,9 +95,31 @@ grow your current split first, regardless of direction.
 This creates a more intuitive resizing experience where your action directly
 corresponds to growing your current workspace in the direction you specify.
 
-## Installation
 
-### Using [lazy.nvim](https://github.com/folke/lazy.nvim)
+# Configuration
+
+Unlike most Neovim plugins, `nvim-tmux-navigator` requires configuration in both
+Neovim and Tmux. In a way, this is as much a tmux plugin as it is a Neovim plugin.
+
+**Why configure both Neovim and Tmux?**
+
+This plugin requires configuration in both tmux and Neovim because they handle keybindings separately:
+
+- **Tmux side**: Tmux intercepts all keypresses first. The tmux configuration detects if the active pane
+is running Neovim, and if so, passes the keypress through to Neovim. Otherwise, tmux handles the
+navigation/resize itself.
+- **Neovim side**: The plugin needs to be installed so Neovim can handle navigation/resize commands and
+communicate with tmux when you're at a window edge.
+
+Without the tmux configuration, your keypresses would only work within Neovim and wouldn't navigate to
+tmux panes. Without the Neovim plugin, navigation from tmux into Neovim would work, but you couldn't
+navigate back out to tmux panes from within Neovim.
+
+## Neovim Setup
+
+### Installation
+
+#### Using [lazy.nvim](https://github.com/folke/lazy.nvim)
 
 ```lua
 {
@@ -110,7 +130,7 @@ corresponds to growing your current workspace in the direction you specify.
 }
 ```
 
-### Using [packer.nvim](https://github.com/wbthomason/packer.nvim)
+#### Using [packer.nvim](https://github.com/wbthomason/packer.nvim)
 
 ```lua
 use {
@@ -121,17 +141,7 @@ use {
 }
 ```
 
-## Configuration
-
-### Setup
-
-Call the setup function in your Neovim config:
-
-```lua
-require('nvim-tmux-navigator').setup()
-```
-
-This will create the user commands needed for navigation and resizing.
+The `setup` command will create the user commands needed for navigation and resizing.
 
 ### Recommended Keymaps
 
@@ -151,25 +161,12 @@ vim.keymap.set('n', '<A-k>', '<cmd>NvimTmuxResizeUp<cr>')
 vim.keymap.set('n', '<A-l>', '<cmd>NvimTmuxResizeRight<cr>')
 ```
 
-### Tmux setup
-
-**Why configure both tmux and Neovim?**
-
-This plugin requires configuration in both tmux and Neovim because they handle keybindings differently:
-
-- **Neovim side**: The plugin needs to be installed so Neovim can handle navigation/resize commands and
-communicate with tmux when you're at a window edge.
-- **Tmux side**: Tmux intercepts all keypresses first. The tmux configuration detects if the active pane
-is running Neovim, and if so, passes the keypress through to Neovim. Otherwise, tmux handles the
-navigation/resize itself.
-
-Without the tmux configuration, your keypresses would only work within Neovim and wouldn't navigate to
-tmux panes. Without the Neovim plugin, navigation from tmux into Neovim would work, but you couldn't
-navigate back out to tmux panes from within Neovim.
+## Tmux Setup
 
 Add this configuration to your `~/.tmux.conf`:
 
 **NOTE -** this assumes you are using the recommended keymaps above. Please modify as needed.
+
 **NOTE -** `NVIM_TMUX_RESIZE_SCRIPT` path must be updated to be the location where this plugin was installed.
 ```sh
 ########################
@@ -185,7 +182,6 @@ bind-key -n 'C-l' if-shell "$is_vim" 'send-keys C-l' 'select-pane -R'
 
 # Resize bindings
 # NOTE: Update the path to match where you cloned this plugin (This should work for lazy.nvim)
-# TODO: see if there is another way to do this besides specifying a path to a file.
 NVIM_TMUX_RESIZE_SCRIPT="$HOME/.local/share/nvim/lazy/nvim-tmux-navigator/scripts/resize_tmux_pane.sh"
 
 bind-key -n 'M-h' if-shell "$is_vim" 'send-keys M-h' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT L 3'"
@@ -209,6 +205,9 @@ bind-key -T copy-mode-vi 'C-l' select-pane -R
 ```
 
 ## Usage
+
+This plugin is really only effective when used with keymaps. Since tmux sends keys to Neovim it is rare that
+you will actually use the navigation or resize commands directly.
 
 ### User Commands
 
