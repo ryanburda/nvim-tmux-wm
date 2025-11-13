@@ -8,21 +8,34 @@ between Neovim and tmux as if they were a single, unified window manager.
 
 ## Navigation
 
-Navigation works seamlessly across Neovim and tmux boundaries. When you press a
-navigation key (default: `<C-h>`, `<C-j>`, `<C-k>`, `<C-l>`), the plugin first
-attempts to move to an adjacent Neovim split. If there's no split in that direction,
-it automatically moves to the adjacent tmux pane instead. This creates a fluid
-navigation experience where you never have to think about whether you're navigating
-within Neovim or between tmux panes.
+Navigation works seamlessly across Neovim and tmux boundaries.
+The default navigation keys are:
+- `<C-h>` left
+- `<C-j>` down
+- `<C-k>` up
+- `<C-l>` right
+
+When any of these are pressed the plugin first attempts to move to an adjacent
+Neovim split. If there's no split in that direction, it automatically moves to
+the adjacent tmux pane instead. This creates a fluid navigation experience where
+you never have to think about whether you're navigating within Neovim or between
+tmux panes.
 
 ## Resizing
 
 This plugin implements an intuitive resizing experience that differs from stock Neovim and tmux behavior.
+The default resizing keys are:
+- `<A-h>` grow left
+- `<A-j>` grow down
+- `<A-k>` grow up
+- `<A-l>` grow right
 
 ### How It Works
 
 The resize implementation **prioritizes making splits bigger**. Think of it as standing inside your
 current pane and pushing the border in the specified direction outward to expand the current split.
+A split will attempt to grow in the specified direction unless it is up against the outermost terminal window,
+in which case it will shrink from the opposite direction.
 
 When you resize:
 1. **First priority**: The current split tries to grow by taking space from a neighbor in the direction you specify
