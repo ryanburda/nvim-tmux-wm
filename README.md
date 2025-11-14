@@ -1,10 +1,10 @@
-# nvim-tmux-navigator
+# nvim-tmux-wm
 
 A Neovim plugin that makes Neovim splits and tmux panes indistinguishable from
 a navigation and resizing perspective. Navigate and resize across the boundary
 between Neovim and tmux as if they were a single, unified window manager.
 
-![](./docs/nvim-tmux-navigator.gif)
+![](./docs/nvim-tmux-wm.gif)
 
 ## Navigation
 
@@ -98,7 +98,7 @@ corresponds to growing your current workspace in the direction you specify.
 
 # Configuration
 
-Unlike most Neovim plugins, `nvim-tmux-navigator` requires configuration in both
+Unlike most Neovim plugins, `nvim-tmux-wm` requires configuration in both
 Neovim and Tmux. In a way, this is as much a tmux plugin as it is a Neovim plugin.
 
 **Why configure both Neovim and Tmux?**
@@ -123,9 +123,9 @@ navigate back out to tmux panes from within Neovim.
 
 ```lua
 {
-  'ryanburda/nvim-tmux-navigator',
+  'ryanburda/nvim-tmux-wm',
   config = function()
-    require('nvim-tmux-navigator').setup()
+    require('nvim-tmux-wm').setup()
   end,
 }
 ```
@@ -134,9 +134,9 @@ navigate back out to tmux panes from within Neovim.
 
 ```lua
 use {
-  'ryanburda/nvim-tmux-navigator',
+  'ryanburda/nvim-tmux-wm',
   config = function()
-    require('nvim-tmux-navigator').setup()
+    require('nvim-tmux-wm').setup()
   end,
 }
 ```
@@ -182,7 +182,7 @@ bind-key -n 'C-l' if-shell "$is_vim" 'send-keys C-l' 'select-pane -R'
 
 # Resize bindings
 # NOTE: Update the path to match where you cloned this plugin (This should work for lazy.nvim)
-NVIM_TMUX_RESIZE_SCRIPT="$HOME/.local/share/nvim/lazy/nvim-tmux-navigator/scripts/resize_tmux_pane.sh"
+NVIM_TMUX_RESIZE_SCRIPT="$HOME/.local/share/nvim/lazy/nvim-tmux-wm/scripts/resize_tmux_pane.sh"
 
 bind-key -n 'M-h' if-shell "$is_vim" 'send-keys M-h' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT L 3'"
 bind-key -n 'M-j' if-shell "$is_vim" 'send-keys M-j' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT D 1'"
@@ -235,7 +235,7 @@ Example with custom amount:
 You can also use the Lua API directly:
 
 ```lua
-local navigator = require('nvim-tmux-navigator')
+local navigator = require('nvim-tmux-wm')
 
 -- Move in a direction ('h', 'j', 'k', or 'l')
 navigator.move('h')  -- Move left

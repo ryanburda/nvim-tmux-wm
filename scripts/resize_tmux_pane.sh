@@ -1,5 +1,5 @@
 #!/bin/sh
-# Smart tmux resize function for nvim-tmux-navigator
+# Smart tmux resize function for nvim-tmux-wm
 # This implements the same "push to grow" resize logic as the nvim plugin
 # TODO: see if this can be put directy in tmux.conf
 
