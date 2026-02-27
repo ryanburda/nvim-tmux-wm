@@ -1,59 +1,40 @@
 local nvim_tmux_wm = require('nvim-tmux-wm')
 
--- Create user commands for moving between splits
-vim.api.nvim_create_user_command('NvimTmuxMoveLeft', function()
-  nvim_tmux_wm.move('h')
+-- Create user commands for navigating between splits
+vim.api.nvim_create_user_command('NvimTmuxNavigateLeft', function()
+  nvim_tmux_wm.navigate('h')
 end, {})
 
-vim.api.nvim_create_user_command('NvimTmuxMoveDown', function()
-  nvim_tmux_wm.move('j')
+vim.api.nvim_create_user_command('NvimTmuxNavigateDown', function()
+  nvim_tmux_wm.navigate('j')
 end, {})
 
-vim.api.nvim_create_user_command('NvimTmuxMoveUp', function()
-  nvim_tmux_wm.move('k')
+vim.api.nvim_create_user_command('NvimTmuxNavigateUp', function()
+  nvim_tmux_wm.navigate('k')
 end, {})
 
-vim.api.nvim_create_user_command('NvimTmuxMoveRight', function()
-  nvim_tmux_wm.move('l')
+vim.api.nvim_create_user_command('NvimTmuxNavigateRight', function()
+  nvim_tmux_wm.navigate('l')
 end, {})
 
 -- Create user commands for resizing splits
-vim.api.nvim_create_user_command('NvimTmuxResizeLeftBorderLeft', function(opts)
+-- Positive amount moves border right/up, negative moves border left/down
+vim.api.nvim_create_user_command('NvimTmuxMoveLeftBorder', function(opts)
   local amount = tonumber(opts.args) or 3
-  nvim_tmux_wm.resize('h', 'h', amount)
+  nvim_tmux_wm.move_border('h', amount)
 end, { nargs = '?' })
 
-vim.api.nvim_create_user_command('NvimTmuxResizeLeftBorderRight', function(opts)
+vim.api.nvim_create_user_command('NvimTmuxMoveRightBorder', function(opts)
   local amount = tonumber(opts.args) or 3
-  nvim_tmux_wm.resize('h', 'l', amount)
+  nvim_tmux_wm.move_border('l', amount)
 end, { nargs = '?' })
 
-vim.api.nvim_create_user_command('NvimTmuxResizeRightBorderLeft', function(opts)
-  local amount = tonumber(opts.args) or 3
-  nvim_tmux_wm.resize('l', 'h', amount)
-end, { nargs = '?' })
-
-vim.api.nvim_create_user_command('NvimTmuxResizeRightBorderRight', function(opts)
-  local amount = tonumber(opts.args) or 3
-  nvim_tmux_wm.resize('l', 'l', amount)
-end, { nargs = '?' })
-
-vim.api.nvim_create_user_command('NvimTmuxResizeTopBorderUp', function(opts)
+vim.api.nvim_create_user_command('NvimTmuxMoveTopBorder', function(opts)
   local amount = tonumber(opts.args) or 1
-  nvim_tmux_wm.resize('k', 'k', amount)
+  nvim_tmux_wm.move_border('k', amount)
 end, { nargs = '?' })
 
-vim.api.nvim_create_user_command('NvimTmuxResizeTopBorderDown', function(opts)
+vim.api.nvim_create_user_command('NvimTmuxMoveBottomBorder', function(opts)
   local amount = tonumber(opts.args) or 1
-  nvim_tmux_wm.resize('k', 'j', amount)
-end, { nargs = '?' })
-
-vim.api.nvim_create_user_command('NvimTmuxResizeBottomBorderUp', function(opts)
-  local amount = tonumber(opts.args) or 1
-  nvim_tmux_wm.resize('j', 'k', amount)
-end, { nargs = '?' })
-
-vim.api.nvim_create_user_command('NvimTmuxResizeBottomBorderDown', function(opts)
-  local amount = tonumber(opts.args) or 1
-  nvim_tmux_wm.resize('j', 'j', amount)
+  nvim_tmux_wm.move_border('j', amount)
 end, { nargs = '?' })

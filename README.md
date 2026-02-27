@@ -4,8 +4,6 @@ A unified window manager for Neovim and tmux.
 
 Navigate and resize seamlessly across Neovim splits and tmux panes as if they were a single application.
 
-![](./docs/nvim-tmux-wm.gif)
-
 ## Navigation
 
 Navigation works seamlessly across Neovim and tmux boundaries.
@@ -23,22 +21,20 @@ moving within Neovim or between tmux panes.
 
 This plugin implements an intuitive split resizing experience that differs from stock Neovim and tmux behavior.
 The default resizing keys are:
-- `<A-h>` move left border left
-- `<A-H>` move right border left
-- `<A-j>` move bottom border down
-- `<A-J>` move top border down
-- `<A-k>` move top border up
-- `<A-K>` move bottom border up
-- `<A-l>` move right border right
-- `<A-L>` move left border right
+- `<A-h>` move left border left (grow)
+- `<A-H>` move left border right (shrink)
+- `<A-j>` move bottom border down (grow)
+- `<A-J>` move bottom border up (shrink)
+- `<A-k>` move top border up (grow)
+- `<A-K>` move top border down (shrink)
+- `<A-l>` move right border right (grow)
+- `<A-L>` move right border left (shrink)
 
 ### How It Works
 
-Each resize operation moves a **specific border** in a **specific direction**. There is no fallback
-behavior — if the border doesn't exist (e.g. you're at the edge of the terminal window), nothing happens.
-
-This gives you explicit, predictable control over your layout. Lowercase keys move the near border
-(the one closest to the direction of the key), while uppercase keys move the far border.
+Each resize operation moves a **specific border** in a **specific direction**.
+- `Alt + Lowercase` keybinds move the border in the direction that grows the current split (ie move right border to the right).
+- `Alt + Uppercase` keybinds move the border in the direction that shrinks the current split (ie move right border to the left).
 
 ### Example
 
@@ -55,13 +51,13 @@ If you have splits arranged like this:
 
 When inside split E:
 - `<A-h>` moves the **left border left** → E grows, D shrinks
-- `<A-H>` moves the **right border left** → E shrinks, F grows
+- `<A-H>` moves the **left border right** → E shrinks, D grows
 - `<A-j>` moves the **bottom border down** → E grows, H shrinks
-- `<A-J>` moves the **top border down** → E shrinks, B grows
+- `<A-J>` moves the **bottom border up** → E shrinks, H grows
 - `<A-k>` moves the **top border up** → E grows, B shrinks
-- `<A-K>` moves the **bottom border up** → E shrinks, H grows
+- `<A-K>` moves the **top border down** → E shrinks, B grows
 - `<A-l>` moves the **right border right** → E grows, F shrinks
-- `<A-L>` moves the **left border right** → E shrinks, D grows
+- `<A-L>` moves the **right border left** → E shrinks, F grows
 
 # Configuration
 
@@ -105,20 +101,20 @@ Add these keymaps to your Neovim config for seamless navigation:
 
 ```lua
 -- Navigation
-vim.keymap.set('n', '<C-h>', '<cmd>NvimTmuxMoveLeft<cr>')
-vim.keymap.set('n', '<C-j>', '<cmd>NvimTmuxMoveDown<cr>')
-vim.keymap.set('n', '<C-k>', '<cmd>NvimTmuxMoveUp<cr>')
-vim.keymap.set('n', '<C-l>', '<cmd>NvimTmuxMoveRight<cr>')
+vim.keymap.set('n', '<C-h>', '<cmd>NvimTmuxNavigateLeft<cr>')
+vim.keymap.set('n', '<C-j>', '<cmd>NvimTmuxNavigateDown<cr>')
+vim.keymap.set('n', '<C-k>', '<cmd>NvimTmuxNavigateUp<cr>')
+vim.keymap.set('n', '<C-l>', '<cmd>NvimTmuxNavigateRight<cr>')
 
 -- Resizing
-vim.keymap.set('n', '<A-h>', '<cmd>NvimTmuxResizeLeftBorderLeft<cr>')
-vim.keymap.set('n', '<A-H>', '<cmd>NvimTmuxResizeRightBorderLeft<cr>')
-vim.keymap.set('n', '<A-j>', '<cmd>NvimTmuxResizeBottomBorderDown<cr>')
-vim.keymap.set('n', '<A-J>', '<cmd>NvimTmuxResizeTopBorderDown<cr>')
-vim.keymap.set('n', '<A-k>', '<cmd>NvimTmuxResizeTopBorderUp<cr>')
-vim.keymap.set('n', '<A-K>', '<cmd>NvimTmuxResizeBottomBorderUp<cr>')
-vim.keymap.set('n', '<A-l>', '<cmd>NvimTmuxResizeRightBorderRight<cr>')
-vim.keymap.set('n', '<A-L>', '<cmd>NvimTmuxResizeLeftBorderRight<cr>')
+vim.keymap.set('n', '<A-h>', '<cmd>NvimTmuxMoveLeftBorder -3<cr>')
+vim.keymap.set('n', '<A-H>', '<cmd>NvimTmuxMoveLeftBorder 3<cr>')
+vim.keymap.set('n', '<A-j>', '<cmd>NvimTmuxMoveBottomBorder -1<cr>')
+vim.keymap.set('n', '<A-J>', '<cmd>NvimTmuxMoveBottomBorder 1<cr>')
+vim.keymap.set('n', '<A-k>', '<cmd>NvimTmuxMoveTopBorder 1<cr>')
+vim.keymap.set('n', '<A-K>', '<cmd>NvimTmuxMoveTopBorder -1<cr>')
+vim.keymap.set('n', '<A-l>', '<cmd>NvimTmuxMoveRightBorder 3<cr>')
+vim.keymap.set('n', '<A-L>', '<cmd>NvimTmuxMoveRightBorder -3<cr>')
 ```
 
 ## Tmux Setup
@@ -151,14 +147,14 @@ bind-key -n 'C-k' if-shell "$is_vim" 'send-keys C-k' 'select-pane -U'
 bind-key -n 'C-l' if-shell "$is_vim" 'send-keys C-l' 'select-pane -R'
 
 # Resize bindings
-bind-key -n 'M-h' if-shell "$is_vim" 'send-keys M-h' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT h h 3'"
-bind-key -n 'M-H' if-shell "$is_vim" 'send-keys M-H' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT l h 3'"
-bind-key -n 'M-j' if-shell "$is_vim" 'send-keys M-j' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT j j 1'"
-bind-key -n 'M-J' if-shell "$is_vim" 'send-keys M-J' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT k j 1'"
-bind-key -n 'M-k' if-shell "$is_vim" 'send-keys M-k' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT k k 1'"
-bind-key -n 'M-K' if-shell "$is_vim" 'send-keys M-K' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT j k 1'"
-bind-key -n 'M-l' if-shell "$is_vim" 'send-keys M-l' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT l l 3'"
-bind-key -n 'M-L' if-shell "$is_vim" 'send-keys M-L' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT h l 3'"
+bind-key -n 'M-h' if-shell "$is_vim" 'send-keys M-h' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT h -3'"
+bind-key -n 'M-H' if-shell "$is_vim" 'send-keys M-H' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT h 3'"
+bind-key -n 'M-j' if-shell "$is_vim" 'send-keys M-j' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT j -1'"
+bind-key -n 'M-J' if-shell "$is_vim" 'send-keys M-J' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT j 1'"
+bind-key -n 'M-k' if-shell "$is_vim" 'send-keys M-k' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT k 1'"
+bind-key -n 'M-K' if-shell "$is_vim" 'send-keys M-K' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT k -1'"
+bind-key -n 'M-l' if-shell "$is_vim" 'send-keys M-l' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT l 3'"
+bind-key -n 'M-L' if-shell "$is_vim" 'send-keys M-L' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT l -3'"
 
 # Legacy tmux version support for navigation
 tmux_version='$(tmux -V | sed -En "s/^tmux ([0-9]+(.[0-9]+)?).*/\1/p")'
@@ -188,24 +184,24 @@ navigation or resize commands directly.
 The following user commands are available:
 
 **Navigation:**
-- `:NvimTmuxMoveLeft` - Move to the left split/pane
-- `:NvimTmuxMoveDown` - Move to the split/pane below
-- `:NvimTmuxMoveUp` - Move to the split/pane above
-- `:NvimTmuxMoveRight` - Move to the right split/pane
+- `:NvimTmuxNavigateLeft` - Navigate to the left split/pane
+- `:NvimTmuxNavigateDown` - Navigate to the split/pane below
+- `:NvimTmuxNavigateUp` - Navigate to the split/pane above
+- `:NvimTmuxNavigateRight` - Navigate to the right split/pane
 
 **Resizing:**
-- `:NvimTmuxResizeLeftBorderLeft [amount]` - Move the left border left by `amount` (default: 3)
-- `:NvimTmuxResizeLeftBorderRight [amount]` - Move the left border right by `amount` (default: 3)
-- `:NvimTmuxResizeRightBorderLeft [amount]` - Move the right border left by `amount` (default: 3)
-- `:NvimTmuxResizeRightBorderRight [amount]` - Move the right border right by `amount` (default: 3)
-- `:NvimTmuxResizeTopBorderUp [amount]` - Move the top border up by `amount` (default: 1)
-- `:NvimTmuxResizeTopBorderDown [amount]` - Move the top border down by `amount` (default: 1)
-- `:NvimTmuxResizeBottomBorderUp [amount]` - Move the bottom border up by `amount` (default: 1)
-- `:NvimTmuxResizeBottomBorderDown [amount]` - Move the bottom border down by `amount` (default: 1)
 
-Example with custom amount:
+Positive amounts move the border right/up, negative amounts move it left/down.
+
+- `:NvimTmuxMoveLeftBorder [amount]` - Move the left border (default: 3)
+- `:NvimTmuxMoveRightBorder [amount]` - Move the right border (default: 3)
+- `:NvimTmuxMoveTopBorder [amount]` - Move the top border (default: 1)
+- `:NvimTmuxMoveBottomBorder [amount]` - Move the bottom border (default: 1)
+
+Examples:
 ```vim
-:NvimTmuxResizeLeftBorderLeft 10
+:NvimTmuxMoveLeftBorder -10   " move left border left by 10
+:NvimTmuxMoveLeftBorder 10    " move left border right by 10
 ```
 
 ### Lua API
@@ -215,24 +211,24 @@ You can also use the Lua API directly:
 ```lua
 local nvim_tmux_wm = require('nvim-tmux-wm')
 
--- Move in a direction ('h', 'j', 'k', or 'l')
-nvim_tmux_wm.move('h')  -- Move left
-nvim_tmux_wm.move('j')  -- Move down
-nvim_tmux_wm.move('k')  -- Move up
-nvim_tmux_wm.move('l')  -- Move right
+-- Navigate in a direction ('h', 'j', 'k', or 'l')
+nvim_tmux_wm.navigate('h')  -- Navigate left
+nvim_tmux_wm.navigate('j')  -- Navigate down
+nvim_tmux_wm.navigate('k')  -- Navigate up
+nvim_tmux_wm.navigate('l')  -- Navigate right
 
--- Resize: move a specific border in a specific direction
--- resize(border_side, move_direction, amount)
+-- Move a specific border by a signed amount
+-- move_border(border_side, amount)
 -- border_side: 'h' (left), 'j' (bottom), 'k' (top), 'l' (right)
--- move_direction: 'h' (left), 'j' (down), 'k' (up), 'l' (right)
-nvim_tmux_wm.resize('h', 'h', 3)  -- Move left border left by 3
-nvim_tmux_wm.resize('h', 'l', 3)  -- Move left border right by 3
-nvim_tmux_wm.resize('l', 'h', 3)  -- Move right border left by 3
-nvim_tmux_wm.resize('l', 'l', 3)  -- Move right border right by 3
-nvim_tmux_wm.resize('k', 'k', 1)  -- Move top border up by 1
-nvim_tmux_wm.resize('k', 'j', 1)  -- Move top border down by 1
-nvim_tmux_wm.resize('j', 'k', 1)  -- Move bottom border up by 1
-nvim_tmux_wm.resize('j', 'j', 1)  -- Move bottom border down by 1
+-- amount: positive = right/up, negative = left/down
+nvim_tmux_wm.move_border('h', -3)  -- Move left border left by 3
+nvim_tmux_wm.move_border('h', 3)   -- Move left border right by 3
+nvim_tmux_wm.move_border('l', -3)  -- Move right border left by 3
+nvim_tmux_wm.move_border('l', 3)   -- Move right border right by 3
+nvim_tmux_wm.move_border('k', 1)   -- Move top border up by 1
+nvim_tmux_wm.move_border('k', -1)  -- Move top border down by 1
+nvim_tmux_wm.move_border('j', 1)   -- Move bottom border up by 1
+nvim_tmux_wm.move_border('j', -1)  -- Move bottom border down by 1
 ```
 
 ## License

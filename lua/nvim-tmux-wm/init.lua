@@ -7,7 +7,7 @@ local nvim_to_tmux_direction_map = {
   ['l'] = 'R'
 }
 
-T.move = function(direction)
+T.navigate = function(direction)
   local current_winnr = vim.fn.winnr()
   local direction_winnr = vim.fn.winnr(direction)
 
@@ -23,20 +23,23 @@ T.move = function(direction)
   end
 end
 
-T.resize = function(border_side, move_direction, amount)
+T.move_border = function(border_side, amount)
   local current_winnr = vim.fn.winnr()
   local border_winnr = vim.fn.winnr(border_side)
 
   if current_winnr == border_winnr then
     -- No nvim window at this border, delegate to tmux
     local script_path = debug.getinfo(1, "S").source:sub(2):match("(.*/)") .. "../../scripts/resize_tmux_pane.sh"
-    os.execute(string.format("tmux run-shell -b '%s %s %s %d' 2>/dev/null", script_path, border_side, move_direction, amount))
+    os.execute(string.format("tmux run-shell -b '%s %s %d' 2>/dev/null", script_path, border_side, amount))
   else
     -- Nvim window exists at this border, resize within nvim
-    local resize_type = (border_side == 'h' or border_side == 'l') and 'vertical ' or ''
-    local sign = (move_direction == 'h' or move_direction == 'k') and '-' or '+'
+    local is_horizontal_border = (border_side == 'j' or border_side == 'k')
+    local resize_type = is_horizontal_border and '' or 'vertical '
+    -- For vertical borders (h/l): positive=right(+), negative=left(-)
+    -- For horizontal borders (j/k): positive=up(-), negative=down(+) — flipped because vim resize +N grows downward
+    local sign = is_horizontal_border and (amount > 0 and '-' or '+') or (amount > 0 and '+' or '-')
     local target_winnr = (border_side == 'h' or border_side == 'k') and border_winnr or current_winnr
-    vim.fn.win_execute(vim.fn.win_getid(target_winnr), string.format('silent! %sresize %s%d', resize_type, sign, amount))
+    vim.fn.win_execute(vim.fn.win_getid(target_winnr), string.format('silent! %sresize %s%d', resize_type, sign, math.abs(amount)))
   end
 end
 
