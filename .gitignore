@@ -1,0 +1,13 @@
+# Neovim
+doc/tags
+
+# Lua
+luac.out
+
+# macOS
+.DS_Store
+
+# Editor
+*.swp
+*.swo
+*~
