@@ -4,6 +4,12 @@ A unified window manager for Neovim and tmux.
 
 Navigate and resize seamlessly across Neovim splits and tmux panes as if they were a single application.
 
+### Navigation
+![Navigation](docs/navigation.gif)
+
+### Resize
+![Resize](docs/resize.gif)
+
 > **Note:** All keymaps shown throughout this README are suggestions, not requirements.
 > Nothing in the plugin implementation on either the Neovim or tmux side is bound to
 > any specific keymap. You are free to use whatever keys you prefer. The only thing that
@@ -24,7 +30,7 @@ where you never have to think about whether you're moving within Neovim or betwe
 ## Resizing
 
 This plugin implements an intuitive split resizing experience that differs from stock Neovim and tmux behavior.
-Each resize operation moves a **specific border** in a **specific direction**.
+Each resize operation moves a **specific border** of the current split in a **specific direction**.
 - `Alt + <hjkl>` keybinds move the border in the direction that grows the current split
 - `Alt + <HJKL>` keybinds move the border in the direction that shrinks the current split
 
