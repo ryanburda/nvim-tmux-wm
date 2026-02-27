@@ -18,13 +18,16 @@ The default navigation keys are:
 - `<C-k>` move up
 - `<C-l>` move right
 
-These keybindings work seamlessly across Neovim and tmux boundaries, creating a
-fluid navigation experience where you never have to think about whether you're
-moving within Neovim or between tmux panes.
+These keybindings work across Neovim and tmux boundaries, creating a fluid navigation experience
+where you never have to think about whether you're moving within Neovim or between tmux panes.
 
 ## Resizing
 
 This plugin implements an intuitive split resizing experience that differs from stock Neovim and tmux behavior.
+Each resize operation moves a **specific border** in a **specific direction**.
+- `Alt + <hjkl>` keybinds move the border in the direction that grows the current split
+- `Alt + <HJKL>` keybinds move the border in the direction that shrinks the current split
+
 The default resizing keys are:
 - `<A-h>` move left border left (grow)
 - `<A-H>` move left border right (shrink)
@@ -35,11 +38,27 @@ The default resizing keys are:
 - `<A-l>` move right border right (grow)
 - `<A-L>` move right border left (shrink)
 
-### How It Works
+### Why Not Stock Resizing?
 
-Each resize operation moves a **specific border** in a **specific direction**.
-- `Alt + Lowercase` keybinds move the border in the direction that grows the current split (ie move right border to the right).
-- `Alt + Uppercase` keybinds move the border in the direction that shrinks the current split (ie move right border to the left).
+Stock Neovim (`resize +N / vertical resize +N`) and tmux (`resize-pane -L/R/U/D`) both operate on the concept of
+"grow" or "shrink" the current pane. But which border actually moves depends on where the pane is in the layout.
+For example:
+  - `:vertical resize +5` in Neovim always moves the right border of the current window... unless there's no split
+  to the right, in which case it moves the left border. The same command does different things depending on where
+  you are.
+  - `tmux resize-pane -R 5` similarly always resizes the current pane rightward, but which border moves depends
+  on the pane's position in the layout.
+
+This means the same key can move different borders depending on context, which makes the behavior feel inconsistent
+and hard to build muscle memory for.
+
+This plugin flips the mental model: instead of "grow/shrink my pane," you say "move this specific border in this
+specific direction."
+- `Alt+h` always moves the left border left (grow left)
+- `Alt+l` always moves the right border right (grow right)
+
+This means the same key always moves the same border in the same direction, regardless of where you are in the layout.
+That's what makes it feel intuitive.
 
 ### Example
 
