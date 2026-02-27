@@ -162,10 +162,10 @@ The following user commands are available:
 
 Positive amounts move the border right/up, negative amounts move it left/down.
 
-- `:NvimTmuxMoveLeftBorder [amount]` - Move the left border (default: 3)
+- `:NvimTmuxMoveLeftBorder [amount]` - Move the left border (default: -3)
 - `:NvimTmuxMoveRightBorder [amount]` - Move the right border (default: 3)
 - `:NvimTmuxMoveTopBorder [amount]` - Move the top border (default: 1)
-- `:NvimTmuxMoveBottomBorder [amount]` - Move the bottom border (default: 1)
+- `:NvimTmuxMoveBottomBorder [amount]` - Move the bottom border (default: -1)
 
 Examples:
 ```vim

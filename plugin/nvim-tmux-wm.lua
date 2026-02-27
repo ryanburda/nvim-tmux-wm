@@ -20,7 +20,7 @@ end, {})
 -- Create user commands for resizing splits
 -- Positive amount moves border right/up, negative moves border left/down
 vim.api.nvim_create_user_command('NvimTmuxMoveLeftBorder', function(opts)
-  local amount = tonumber(opts.args) or 3
+  local amount = tonumber(opts.args) or -3
   nvim_tmux_wm.move_border('h', amount)
 end, { nargs = '?' })
 
@@ -35,6 +35,6 @@ vim.api.nvim_create_user_command('NvimTmuxMoveTopBorder', function(opts)
 end, { nargs = '?' })
 
 vim.api.nvim_create_user_command('NvimTmuxMoveBottomBorder', function(opts)
-  local amount = tonumber(opts.args) or 1
+  local amount = tonumber(opts.args) or -1
   nvim_tmux_wm.move_border('j', amount)
 end, { nargs = '?' })
