@@ -4,6 +4,11 @@ A unified window manager for Neovim and tmux.
 
 Navigate and resize seamlessly across Neovim splits and tmux panes as if they were a single application.
 
+> **Note:** All keymaps shown throughout this README are suggestions, not requirements.
+> Nothing in the plugin implementation on either the Neovim or tmux side is bound to
+> any specific keymap. You are free to use whatever keys you prefer. The only thing that
+> matters is that your Neovim and tmux keymaps work together so the experience is seamless.
+
 ## Navigation
 
 Navigation works seamlessly across Neovim and tmux boundaries.
@@ -117,6 +122,67 @@ vim.keymap.set('n', '<A-l>', '<cmd>NvimTmuxMoveRightBorder 3<cr>')
 vim.keymap.set('n', '<A-L>', '<cmd>NvimTmuxMoveRightBorder -3<cr>')
 ```
 
+<details>
+<summary><strong style="font-size: 1.5em;">Neovim Usage</strong></summary>
+
+This plugin is best experienced through keymaps that unify the experience between Neovim and tmux.
+Since tmux sends keys to Neovim it is rare that you will actually use the Neovim specific navigation
+or resize commands directly.
+
+### User Commands
+
+The following user commands are available:
+
+**Navigation:**
+- `:NvimTmuxNavigateLeft` - Navigate to the left split/pane
+- `:NvimTmuxNavigateDown` - Navigate to the split/pane below
+- `:NvimTmuxNavigateUp` - Navigate to the split/pane above
+- `:NvimTmuxNavigateRight` - Navigate to the right split/pane
+
+**Resizing:**
+
+Positive amounts move the border right/up, negative amounts move it left/down.
+
+- `:NvimTmuxMoveLeftBorder [amount]` - Move the left border (default: 3)
+- `:NvimTmuxMoveRightBorder [amount]` - Move the right border (default: 3)
+- `:NvimTmuxMoveTopBorder [amount]` - Move the top border (default: 1)
+- `:NvimTmuxMoveBottomBorder [amount]` - Move the bottom border (default: 1)
+
+Examples:
+```vim
+:NvimTmuxMoveLeftBorder -10   " move left border left by 10
+:NvimTmuxMoveLeftBorder 10    " move left border right by 10
+```
+
+### Lua API
+
+You can also use the Lua API directly:
+
+```lua
+local nvim_tmux_wm = require('nvim-tmux-wm')
+
+-- Navigate in a direction ('h', 'j', 'k', or 'l')
+nvim_tmux_wm.navigate('h')  -- Navigate left
+nvim_tmux_wm.navigate('j')  -- Navigate down
+nvim_tmux_wm.navigate('k')  -- Navigate up
+nvim_tmux_wm.navigate('l')  -- Navigate right
+
+-- Move a specific border by a signed amount
+-- move_border(border_side, amount)
+-- border_side: 'h' (left), 'j' (bottom), 'k' (top), 'l' (right)
+-- amount: positive = right/up, negative = left/down
+nvim_tmux_wm.move_border('h', -3)  -- Move left border left by 3
+nvim_tmux_wm.move_border('h', 3)   -- Move left border right by 3
+nvim_tmux_wm.move_border('l', -3)  -- Move right border left by 3
+nvim_tmux_wm.move_border('l', 3)   -- Move right border right by 3
+nvim_tmux_wm.move_border('k', 1)   -- Move top border up by 1
+nvim_tmux_wm.move_border('k', -1)  -- Move top border down by 1
+nvim_tmux_wm.move_border('j', 1)   -- Move bottom border up by 1
+nvim_tmux_wm.move_border('j', -1)  -- Move bottom border down by 1
+```
+
+</details>
+
 ## Tmux Setup
 
 The tmux configuration needs to know where to find the [resize script](./scripts/resize_tmux_pane.sh)
@@ -171,65 +237,7 @@ bind-key -T copy-mode-vi 'C-l' select-pane -R
 ####################
 ```
 
-## Usage
 
-After following the steps above, restart Neovim and tmux for the changes to take effect.
-
-This plugin is best experienced through keymaps that unify the experience between Neovim and tmux.
-Since tmux sends keys to Neovim it is rare that you will actually use the Neovim specific
-navigation or resize commands directly.
-
-### User Commands
-
-The following user commands are available:
-
-**Navigation:**
-- `:NvimTmuxNavigateLeft` - Navigate to the left split/pane
-- `:NvimTmuxNavigateDown` - Navigate to the split/pane below
-- `:NvimTmuxNavigateUp` - Navigate to the split/pane above
-- `:NvimTmuxNavigateRight` - Navigate to the right split/pane
-
-**Resizing:**
-
-Positive amounts move the border right/up, negative amounts move it left/down.
-
-- `:NvimTmuxMoveLeftBorder [amount]` - Move the left border (default: 3)
-- `:NvimTmuxMoveRightBorder [amount]` - Move the right border (default: 3)
-- `:NvimTmuxMoveTopBorder [amount]` - Move the top border (default: 1)
-- `:NvimTmuxMoveBottomBorder [amount]` - Move the bottom border (default: 1)
-
-Examples:
-```vim
-:NvimTmuxMoveLeftBorder -10   " move left border left by 10
-:NvimTmuxMoveLeftBorder 10    " move left border right by 10
-```
-
-### Lua API
-
-You can also use the Lua API directly:
-
-```lua
-local nvim_tmux_wm = require('nvim-tmux-wm')
-
--- Navigate in a direction ('h', 'j', 'k', or 'l')
-nvim_tmux_wm.navigate('h')  -- Navigate left
-nvim_tmux_wm.navigate('j')  -- Navigate down
-nvim_tmux_wm.navigate('k')  -- Navigate up
-nvim_tmux_wm.navigate('l')  -- Navigate right
-
--- Move a specific border by a signed amount
--- move_border(border_side, amount)
--- border_side: 'h' (left), 'j' (bottom), 'k' (top), 'l' (right)
--- amount: positive = right/up, negative = left/down
-nvim_tmux_wm.move_border('h', -3)  -- Move left border left by 3
-nvim_tmux_wm.move_border('h', 3)   -- Move left border right by 3
-nvim_tmux_wm.move_border('l', -3)  -- Move right border left by 3
-nvim_tmux_wm.move_border('l', 3)   -- Move right border right by 3
-nvim_tmux_wm.move_border('k', 1)   -- Move top border up by 1
-nvim_tmux_wm.move_border('k', -1)  -- Move top border down by 1
-nvim_tmux_wm.move_border('j', 1)   -- Move bottom border up by 1
-nvim_tmux_wm.move_border('j', -1)  -- Move bottom border down by 1
-```
 
 ## License
 
