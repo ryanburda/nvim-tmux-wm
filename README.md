@@ -127,29 +127,17 @@ navigate back out to tmux panes from within Neovim.
 
 ### Installation
 
+#### Using [vim.pack](https://neovim.io/doc/user/lua.html#vim.pack)
+
+```lua
+vim.pack.add({ 'https://github.com/ryanburda/nvim-tmux-wm' })
+```
+
 #### Using [lazy.nvim](https://github.com/folke/lazy.nvim)
 
 ```lua
-{
-  'ryanburda/nvim-tmux-wm',
-  config = function()
-    require('nvim-tmux-wm').setup()
-  end,
-}
+{ 'ryanburda/nvim-tmux-wm' }
 ```
-
-#### Using [packer.nvim](https://github.com/wbthomason/packer.nvim)
-
-```lua
-use {
-  'ryanburda/nvim-tmux-wm',
-  config = function()
-    require('nvim-tmux-wm').setup()
-  end,
-}
-```
-
-The `setup` command will create the user commands needed for navigation and resizing.
 
 ### Recommended Keymaps
 
@@ -229,7 +217,7 @@ navigation or resize commands directly.
 
 ### User Commands
 
-After calling `setup()`, the following user commands are available:
+The following user commands are available:
 
 **Navigation:**
 - `:NvimTmuxNavigateLeft` - Move to the left split/pane
