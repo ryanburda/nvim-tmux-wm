@@ -10,10 +10,10 @@ Navigate and resize seamlessly across Neovim splits and tmux panes as if they we
 
 Navigation works seamlessly across Neovim and tmux boundaries.
 The default navigation keys are:
-- `<C-h>` navigate left
-- `<C-j>` navigate down
-- `<C-k>` navigate up
-- `<C-l>` navigate right
+- `<C-h>` move left
+- `<C-j>` move down
+- `<C-k>` move up
+- `<C-l>` move right
 
 These keybindings work seamlessly across Neovim and tmux boundaries, creating a
 fluid navigation experience where you never have to think about whether you're
@@ -23,85 +23,45 @@ moving within Neovim or between tmux panes.
 
 This plugin implements an intuitive split resizing experience that differs from stock Neovim and tmux behavior.
 The default resizing keys are:
-- `<A-h>` resize left
-- `<A-j>` resize down
-- `<A-k>` resize up
-- `<A-l>` resize right
+- `<A-h>` move left border left
+- `<A-H>` move right border left
+- `<A-j>` move bottom border down
+- `<A-J>` move top border down
+- `<A-k>` move top border up
+- `<A-K>` move bottom border up
+- `<A-l>` move right border right
+- `<A-L>` move left border right
 
 ### How It Works
 
-The resize implementation **prioritizes making splits bigger by expanding in a direction**. Think of
-it as standing inside your current pane and pushing the border in the specified direction outward to
-expand the current split. A split will attempt to grow in the specified direction unless it is up
-against the outermost terminal window, in which case it will shrink from the opposite direction.
+Each resize operation moves a **specific border** in a **specific direction**. There is no fallback
+behavior — if the border doesn't exist (e.g. you're at the edge of the terminal window), nothing happens.
 
-When you resize:
-1. **First priority**: The current split tries to grow by taking space from a neighbor in the direction you specify
-2. **Fallback**: If direction specified is already touching the edge of the container (terminal window), the split will shrink from the opposite direction instead
-3. **Smart boundaries**: A Neovim split will never resize a tmux pane if there's another Neovim split it can take space from.
+This gives you explicit, predictable control over your layout. Lowercase keys move the near border
+(the one closest to the direction of the key), while uppercase keys move the far border.
+
 ### Example
 
 If you have splits arranged like this:
 ```
-┌─────┬─────┐
-│  A  │  B  │
-├─────┼─────┤
-│  C  │  D  │ ← You are here
-└─────┴─────┘
+┌─────┬─────┬─────┐
+│  A  │  B  │  C  │
+├─────┼─────┼─────┤
+│  D  │  E  │  F  │
+├─────┼─────┼─────┤
+│  G  │  H  │  I  │
+└─────┴─────┴─────┘
 ```
 
-When you press `<A-k>` (resize up) from split D:
-- Split D will grow upward, taking space from split B
-- The border between B and D moves up, making D larger
-
-When you press `<A-j>` (resize down) from split D:
-- Split D will shrink downward, giving more room to split B
-- The border between B and D moves down, making D smaller
-- This occurs because the bottom border of D is already touching
-the bottom border of the entire window and thus cannot go down
-any further
-
-When you press `<A-h>` (resize left) from split D:
-- Split D will grow to the left, taking space from split C
-- The border between D and C moves to the left, making D larger
-
-When you press `<A-l>` (resize right) from split D:
-- Split D will shrink to the right, giving more room to split C
-- The border between D and C moves to the right, making D smaller
-- This occurs because the right border of D is already touching
-the right border of the entire window and thus cannot go to the
-right any further
-
-
-In a more complicated case:
-```
-┌─────────────┐
-│      A      │
-├─────────────┤
-│      B      │ ← You are here
-├─────────────┤
-│      C      │
-└─────────────┘
-```
-
-Split B is does not touch the either the top or bottom of the terminal window.
-
-When you press `<A-k>` (resize up) from split B:
-- Split B will grow upward, taking space from split A
-- The border between B and A moves up, making B larger
-
-When you press `<A-j>` (resize down) from split B:
-- Split B will grow downward, taking space from split C
-- The border between B and C moves down, making B larger
-
-Notice that in this case, both resizing up and down made split B larger (unlike
-in the first example where one direction grew and the other shrank). This is what
-we mean by **prioritizing making splits bigger** - the plugin always attempts to
-grow your current split first, regardless of direction.
-
-This creates a more intuitive resizing experience where your action directly
-corresponds to growing your current workspace in the direction you specify.
-
+When inside split E:
+- `<A-h>` moves the **left border left** → E grows, D shrinks
+- `<A-H>` moves the **right border left** → E shrinks, F grows
+- `<A-j>` moves the **bottom border down** → E grows, H shrinks
+- `<A-J>` moves the **top border down** → E shrinks, B grows
+- `<A-k>` moves the **top border up** → E grows, B shrinks
+- `<A-K>` moves the **bottom border up** → E shrinks, H grows
+- `<A-l>` moves the **right border right** → E grows, F shrinks
+- `<A-L>` moves the **left border right** → E shrinks, D grows
 
 # Configuration
 
@@ -145,16 +105,20 @@ Add these keymaps to your Neovim config for seamless navigation:
 
 ```lua
 -- Navigation
-vim.keymap.set('n', '<C-h>', '<cmd>NvimTmuxNavigateLeft<cr>')
-vim.keymap.set('n', '<C-j>', '<cmd>NvimTmuxNavigateDown<cr>')
-vim.keymap.set('n', '<C-k>', '<cmd>NvimTmuxNavigateUp<cr>')
-vim.keymap.set('n', '<C-l>', '<cmd>NvimTmuxNavigateRight<cr>')
+vim.keymap.set('n', '<C-h>', '<cmd>NvimTmuxMoveLeft<cr>')
+vim.keymap.set('n', '<C-j>', '<cmd>NvimTmuxMoveDown<cr>')
+vim.keymap.set('n', '<C-k>', '<cmd>NvimTmuxMoveUp<cr>')
+vim.keymap.set('n', '<C-l>', '<cmd>NvimTmuxMoveRight<cr>')
 
--- Resizing (optional)
-vim.keymap.set('n', '<A-h>', '<cmd>NvimTmuxResizeLeft<cr>')
-vim.keymap.set('n', '<A-j>', '<cmd>NvimTmuxResizeDown<cr>')
-vim.keymap.set('n', '<A-k>', '<cmd>NvimTmuxResizeUp<cr>')
-vim.keymap.set('n', '<A-l>', '<cmd>NvimTmuxResizeRight<cr>')
+-- Resizing
+vim.keymap.set('n', '<A-h>', '<cmd>NvimTmuxResizeLeftBorderLeft<cr>')
+vim.keymap.set('n', '<A-H>', '<cmd>NvimTmuxResizeRightBorderLeft<cr>')
+vim.keymap.set('n', '<A-j>', '<cmd>NvimTmuxResizeBottomBorderDown<cr>')
+vim.keymap.set('n', '<A-J>', '<cmd>NvimTmuxResizeTopBorderDown<cr>')
+vim.keymap.set('n', '<A-k>', '<cmd>NvimTmuxResizeTopBorderUp<cr>')
+vim.keymap.set('n', '<A-K>', '<cmd>NvimTmuxResizeBottomBorderUp<cr>')
+vim.keymap.set('n', '<A-l>', '<cmd>NvimTmuxResizeRightBorderRight<cr>')
+vim.keymap.set('n', '<A-L>', '<cmd>NvimTmuxResizeLeftBorderRight<cr>')
 ```
 
 ## Tmux Setup
@@ -187,10 +151,14 @@ bind-key -n 'C-k' if-shell "$is_vim" 'send-keys C-k' 'select-pane -U'
 bind-key -n 'C-l' if-shell "$is_vim" 'send-keys C-l' 'select-pane -R'
 
 # Resize bindings
-bind-key -n 'M-h' if-shell "$is_vim" 'send-keys M-h' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT L 3'"
-bind-key -n 'M-j' if-shell "$is_vim" 'send-keys M-j' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT D 1'"
-bind-key -n 'M-k' if-shell "$is_vim" 'send-keys M-k' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT U 1'"
-bind-key -n 'M-l' if-shell "$is_vim" 'send-keys M-l' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT R 3'"
+bind-key -n 'M-h' if-shell "$is_vim" 'send-keys M-h' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT h h 3'"
+bind-key -n 'M-H' if-shell "$is_vim" 'send-keys M-H' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT l h 3'"
+bind-key -n 'M-j' if-shell "$is_vim" 'send-keys M-j' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT j j 1'"
+bind-key -n 'M-J' if-shell "$is_vim" 'send-keys M-J' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT k j 1'"
+bind-key -n 'M-k' if-shell "$is_vim" 'send-keys M-k' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT k k 1'"
+bind-key -n 'M-K' if-shell "$is_vim" 'send-keys M-K' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT j k 1'"
+bind-key -n 'M-l' if-shell "$is_vim" 'send-keys M-l' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT l l 3'"
+bind-key -n 'M-L' if-shell "$is_vim" 'send-keys M-L' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT h l 3'"
 
 # Legacy tmux version support for navigation
 tmux_version='$(tmux -V | sed -En "s/^tmux ([0-9]+(.[0-9]+)?).*/\1/p")'
@@ -220,20 +188,24 @@ navigation or resize commands directly.
 The following user commands are available:
 
 **Navigation:**
-- `:NvimTmuxNavigateLeft` - Move to the left split/pane
-- `:NvimTmuxNavigateDown` - Move to the split/pane below
-- `:NvimTmuxNavigateUp` - Move to the split/pane above
-- `:NvimTmuxNavigateRight` - Move to the right split/pane
+- `:NvimTmuxMoveLeft` - Move to the left split/pane
+- `:NvimTmuxMoveDown` - Move to the split/pane below
+- `:NvimTmuxMoveUp` - Move to the split/pane above
+- `:NvimTmuxMoveRight` - Move to the right split/pane
 
 **Resizing:**
-- `:NvimTmuxResizeLeft [amount]` - Resize left by `amount` (default: 5)
-- `:NvimTmuxResizeDown [amount]` - Resize down by `amount` (default: 5)
-- `:NvimTmuxResizeUp [amount]` - Resize up by `amount` (default: 5)
-- `:NvimTmuxResizeRight [amount]` - Resize right by `amount` (default: 5)
+- `:NvimTmuxResizeLeftBorderLeft [amount]` - Move the left border left by `amount` (default: 3)
+- `:NvimTmuxResizeLeftBorderRight [amount]` - Move the left border right by `amount` (default: 3)
+- `:NvimTmuxResizeRightBorderLeft [amount]` - Move the right border left by `amount` (default: 3)
+- `:NvimTmuxResizeRightBorderRight [amount]` - Move the right border right by `amount` (default: 3)
+- `:NvimTmuxResizeTopBorderUp [amount]` - Move the top border up by `amount` (default: 1)
+- `:NvimTmuxResizeTopBorderDown [amount]` - Move the top border down by `amount` (default: 1)
+- `:NvimTmuxResizeBottomBorderUp [amount]` - Move the bottom border up by `amount` (default: 1)
+- `:NvimTmuxResizeBottomBorderDown [amount]` - Move the bottom border down by `amount` (default: 1)
 
 Example with custom amount:
 ```vim
-:NvimTmuxResizeLeft 10
+:NvimTmuxResizeLeftBorderLeft 10
 ```
 
 ### Lua API
@@ -241,19 +213,26 @@ Example with custom amount:
 You can also use the Lua API directly:
 
 ```lua
-local navigator = require('nvim-tmux-wm')
+local nvim_tmux_wm = require('nvim-tmux-wm')
 
 -- Move in a direction ('h', 'j', 'k', or 'l')
-navigator.move('h')  -- Move left
-navigator.move('j')  -- Move down
-navigator.move('k')  -- Move up
-navigator.move('l')  -- Move right
+nvim_tmux_wm.move('h')  -- Move left
+nvim_tmux_wm.move('j')  -- Move down
+nvim_tmux_wm.move('k')  -- Move up
+nvim_tmux_wm.move('l')  -- Move right
 
--- Resize in a direction with a specific amount
-navigator.resize('h', 10)  -- Resize left by 10
-navigator.resize('j', 5)   -- Resize down by 5
-navigator.resize('k', 5)   -- Resize up by 5
-navigator.resize('l', 10)  -- Resize right by 10
+-- Resize: move a specific border in a specific direction
+-- resize(border_side, move_direction, amount)
+-- border_side: 'h' (left), 'j' (bottom), 'k' (top), 'l' (right)
+-- move_direction: 'h' (left), 'j' (down), 'k' (up), 'l' (right)
+nvim_tmux_wm.resize('h', 'h', 3)  -- Move left border left by 3
+nvim_tmux_wm.resize('h', 'l', 3)  -- Move left border right by 3
+nvim_tmux_wm.resize('l', 'h', 3)  -- Move right border left by 3
+nvim_tmux_wm.resize('l', 'l', 3)  -- Move right border right by 3
+nvim_tmux_wm.resize('k', 'k', 1)  -- Move top border up by 1
+nvim_tmux_wm.resize('k', 'j', 1)  -- Move top border down by 1
+nvim_tmux_wm.resize('j', 'k', 1)  -- Move bottom border up by 1
+nvim_tmux_wm.resize('j', 'j', 1)  -- Move bottom border down by 1
 ```
 
 ## License

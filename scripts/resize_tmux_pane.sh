@@ -1,58 +1,38 @@
 #!/bin/sh
-# Smart tmux resize function for nvim-tmux-wm
-# This implements the same "push to grow" resize logic as the nvim plugin
+# Tmux resize script for nvim-tmux-wm
+# Moves a specific border in a specific direction
 
-direction=$1
-amount=$2
+border_side=$1
+move_dir=$2
+amount=$3
 
-at_left=$(tmux display-message -p '#{pane_at_left}')
-at_right=$(tmux display-message -p '#{pane_at_right}')
-at_top=$(tmux display-message -p '#{pane_at_top}')
-at_bottom=$(tmux display-message -p '#{pane_at_bottom}')
+# Map vim-style direction to tmux flag
+case $move_dir in
+  h) tmux_flag="-L" ;;
+  j) tmux_flag="-D" ;;
+  k) tmux_flag="-U" ;;
+  l) tmux_flag="-R" ;;
+esac
 
-case $direction in
-  L)
-    if [ $at_left -eq 1 ] && [ $at_right -eq 1 ]; then
-      :
-    elif [ $at_left -eq 0 ] && [ $at_right -eq 1 ]; then
-      tmux resize-pane -L $amount
-    elif [ $at_left -eq 1 ] && [ $at_right -eq 0 ]; then
-      tmux resize-pane -L $amount
-    elif [ $at_left -eq 0 ] && [ $at_right -eq 0 ]; then
-      tmux resize-pane -t {left-of} -L $amount
-    fi
+# Check if a pane exists at the border, then resize
+# Left/top borders target the neighbor pane; right/bottom borders target current pane
+case $border_side in
+  h)
+    [ "$(tmux display-message -p '#{pane_at_left}')" -eq 0 ] && \
+      tmux resize-pane -t {left-of} $tmux_flag $amount 2>/dev/null
     ;;
-  R)
-    if [ $at_left -eq 1 ] && [ $at_right -eq 1 ]; then
-      :
-    elif [ $at_left -eq 1 ] && [ $at_right -eq 0 ]; then
-      tmux resize-pane -R $amount
-    elif [ $at_left -eq 0 ] && [ $at_right -eq 1 ]; then
-      tmux resize-pane -R $amount
-    elif [ $at_left -eq 0 ] && [ $at_right -eq 0 ]; then
-      tmux resize-pane -t {right-of} -R $amount
-    fi
+  j)
+    [ "$(tmux display-message -p '#{pane_at_bottom}')" -eq 0 ] && \
+      tmux resize-pane $tmux_flag $amount 2>/dev/null
     ;;
-  U)
-    if [ $at_top -eq 1 ] && [ $at_bottom -eq 1 ]; then
-      :
-    elif [ $at_top -eq 0 ] && [ $at_bottom -eq 1 ]; then
-      tmux resize-pane -U $amount
-    elif [ $at_top -eq 1 ] && [ $at_bottom -eq 0 ]; then
-      tmux resize-pane -U $amount
-    elif [ $at_top -eq 0 ] && [ $at_bottom -eq 0 ]; then
-      tmux resize-pane -t {up-of} -U $amount
-    fi
+  k)
+    [ "$(tmux display-message -p '#{pane_at_top}')" -eq 0 ] && \
+      tmux resize-pane -t {up-of} $tmux_flag $amount 2>/dev/null
     ;;
-  D)
-    if [ $at_top -eq 1 ] && [ $at_bottom -eq 1 ]; then
-      :
-    elif [ $at_top -eq 1 ] && [ $at_bottom -eq 0 ]; then
-      tmux resize-pane -D $amount
-    elif [ $at_top -eq 0 ] && [ $at_bottom -eq 1 ]; then
-      tmux resize-pane -D $amount
-    elif [ $at_top -eq 0 ] && [ $at_bottom -eq 0 ]; then
-      tmux resize-pane -t {down-of} -D $amount
-    fi
+  l)
+    [ "$(tmux display-message -p '#{pane_at_right}')" -eq 0 ] && \
+      tmux resize-pane $tmux_flag $amount 2>/dev/null
     ;;
 esac
+
+exit 0
