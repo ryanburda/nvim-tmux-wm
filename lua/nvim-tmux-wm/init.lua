@@ -7,6 +7,8 @@ local nvim_to_tmux_direction_map = {
   ['l'] = 'R'
 }
 
+--- Navigate to the next window in the given direction, crossing into tmux if at the edge.
+---@param direction string vim direction key: "h" (left), "j" (down), "k" (up), "l" (right)
 T.navigate = function(direction)
   local current_winnr = vim.fn.winnr()
   local direction_winnr = vim.fn.winnr(direction)
@@ -23,6 +25,9 @@ T.navigate = function(direction)
   end
 end
 
+--- Move a window border by a signed amount, crossing into tmux if at the edge.
+---@param border_side string which border to move: "h" (left), "j" (bottom), "k" (top), "l" (right)
+---@param amount integer signed offset; positive=right/up, negative=left/down
 T.move_border = function(border_side, amount)
   local current_winnr = vim.fn.winnr()
   local border_winnr = vim.fn.winnr(border_side)
