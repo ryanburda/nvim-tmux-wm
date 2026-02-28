@@ -272,17 +272,30 @@ keystrokes so the experience feels seamless.
 For example, if you wanted `<A-h>` to move the left border to the left by 10 columns instead of the default 3,
 update both sides:
 
+**Tmux:**
+```sh
+#  Key intercepted by tmux                                                             Move border amount
+#             |                                                                                 |
+#             V                                                                                 V
+bind-key -n 'M-h' if-shell "$is_vim" 'send-keys M-h' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT h -10'"
+#                                                ^
+#                                                |
+#                                     Key sent to vim if currently in vim window
+```
+
 **Neovim:**
 ```lua
+--          Key intercepted by nvim               Move border amount
+--                     |                                   |
+--                     V                                   V
 vim.keymap.set('n', '<A-h>', '<cmd>NvimTmuxMoveLeftBorder -10<cr>')
 ```
 
-**Tmux:**
-```sh
-bind-key -n 'M-h' if-shell "$is_vim" 'send-keys M-h' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT h -10'"
-```
-
 As long as both sides agree on the key and the action, everything will work.
+
+> **Note:** Technically, the key intercepted by tmux and the key sent to Neovim don't have to match.
+> However, this is a bad idea in practice. If they differ, your Neovim navigation and resize keybinds
+> would behave differently when running Neovim outside of tmux, breaking your muscle memory.
 
 ## License
 
