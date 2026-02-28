@@ -12,9 +12,9 @@
 # tmux resize-pane [-t {left-of | up-of}] {-L | -R | -U | -D} absolute_amount 2>/dev/null
 # ```
 #
-# `tmux resize-pane` always moves the bottom/right corner of the target pane. To move the
+# `tmux resize-pane` always moves the bottom/right border of the target pane. To move the
 # left or top border, we target the neighbor pane via `{left-of}` or `{up-of}`, so that
-# the neighbor's bottom-right corner (which is our shared border) gets moved.
+# the neighbor's bottom/right border (which is our shared border) gets moved.
 #
 # The absolute amount is needed because tmux resize-pane expects a direction
 # flag (-L, -R, -U, -D) paired with a positive integer for the count.
