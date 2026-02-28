@@ -166,7 +166,7 @@ The following user commands are available:
 
 **Resizing:**
 
-Positive amounts move the border right/up, negative amounts move it left/down.
+Amounts work like a coordinate plane: positive numbers move the border right/up, negative numbers move it left/down.
 
 - `:NvimTmuxMoveLeftBorder [amount]` - Move the left border (default: -3)
 - `:NvimTmuxMoveRightBorder [amount]` - Move the right border (default: 3)
@@ -197,12 +197,12 @@ nvim_tmux_wm.navigate('l')  -- Navigate right
 -- border_side: 'h' (left), 'j' (bottom), 'k' (top), 'l' (right)
 -- amount: positive = right/up, negative = left/down
 nvim_tmux_wm.move_border('h', -3)  -- Move left border left by 3
-nvim_tmux_wm.move_border('h', 3)   -- Move left border right by 3
+nvim_tmux_wm.move_border('h',  3)  -- Move left border right by 3
 nvim_tmux_wm.move_border('l', -3)  -- Move right border left by 3
-nvim_tmux_wm.move_border('l', 3)   -- Move right border right by 3
-nvim_tmux_wm.move_border('k', 1)   -- Move top border up by 1
+nvim_tmux_wm.move_border('l',  3)  -- Move right border right by 3
+nvim_tmux_wm.move_border('k',  1)  -- Move top border up by 1
 nvim_tmux_wm.move_border('k', -1)  -- Move top border down by 1
-nvim_tmux_wm.move_border('j', 1)   -- Move bottom border up by 1
+nvim_tmux_wm.move_border('j',  1)  -- Move bottom border up by 1
 nvim_tmux_wm.move_border('j', -1)  -- Move bottom border down by 1
 ```
 
@@ -238,13 +238,14 @@ bind-key -n 'C-k' if-shell "$is_vim" 'send-keys C-k' 'select-pane -U'
 bind-key -n 'C-l' if-shell "$is_vim" 'send-keys C-l' 'select-pane -R'
 
 # Resize bindings
+# Amounts work like a coordinate plane: positive numbers move the border right/up, negative numbers move it left/down.
 bind-key -n 'M-h' if-shell "$is_vim" 'send-keys M-h' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT h -3'"
-bind-key -n 'M-H' if-shell "$is_vim" 'send-keys M-H' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT h 3'"
+bind-key -n 'M-H' if-shell "$is_vim" 'send-keys M-H' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT h  3'"
 bind-key -n 'M-j' if-shell "$is_vim" 'send-keys M-j' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT j -1'"
-bind-key -n 'M-J' if-shell "$is_vim" 'send-keys M-J' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT j 1'"
-bind-key -n 'M-k' if-shell "$is_vim" 'send-keys M-k' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT k 1'"
+bind-key -n 'M-J' if-shell "$is_vim" 'send-keys M-J' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT j  1'"
+bind-key -n 'M-k' if-shell "$is_vim" 'send-keys M-k' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT k  1'"
 bind-key -n 'M-K' if-shell "$is_vim" 'send-keys M-K' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT k -1'"
-bind-key -n 'M-l' if-shell "$is_vim" 'send-keys M-l' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT l 3'"
+bind-key -n 'M-l' if-shell "$is_vim" 'send-keys M-l' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT l  3'"
 bind-key -n 'M-L' if-shell "$is_vim" 'send-keys M-L' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT l -3'"
 
 # Legacy tmux version support for navigation
@@ -262,7 +263,26 @@ bind-key -T copy-mode-vi 'C-l' select-pane -R
 ####################
 ```
 
+## Modifying Keymaps
 
+The keymaps shown in this README are not set in stone. You can change the keys to whatever you prefer.
+The only thing that matters is that your Neovim and tmux keymaps invoke the same actions on the same
+keystrokes so the experience feels seamless.
+
+For example, if you wanted `<A-h>` to move the left border to the left by 10 columns instead of the default 3,
+update both sides:
+
+**Neovim:**
+```lua
+vim.keymap.set('n', '<A-h>', '<cmd>NvimTmuxMoveLeftBorder -10<cr>')
+```
+
+**Tmux:**
+```sh
+bind-key -n 'M-h' if-shell "$is_vim" 'send-keys M-h' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT h -10'"
+```
+
+As long as both sides agree on the key and the action, everything will work.
 
 ## License
 
