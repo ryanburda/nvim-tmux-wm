@@ -127,7 +127,7 @@ vim.pack.add({ 'https://github.com/ryanburda/nvim-tmux-wm' })
 
 ### Recommended Keymaps
 
-Add these keymaps to your Neovim config for seamless navigation:
+Add these keymaps to your Neovim config for seamless navigation and resizing:
 
 ```lua
 -- Navigation
@@ -216,14 +216,22 @@ copy-pasted into your tmux config) to ensure both Neovim and tmux use identical,
 resize behavior. This ensures the window manager experience is kept consistent with future releases.
 
 After installing the plugin with your Neovim package manager, update the `NVIM_TMUX_RESIZE_SCRIPT`
-path in the configuration below to point to where the plugin was installed.
+path in the configuration below to point to where the plugin was installed. To find this path, run
+the following command in Neovim:
+
+```vim
+:lua print(vim.api.nvim_get_runtime_file("scripts/resize_tmux_pane.sh", false)[1])
+```
+
+This works regardless of which package manager you use because both lazy.nvim and vim.pack add the
+plugin directory to Neovim's runtimepath.
 
 Add this configuration to your `~/.tmux.conf`:
 ```sh
 ################
 # nvim-tmux-wm #
 ################
-# NOTE: Update the path to match where you cloned this plugin (This should work for lazy.nvim)
+# NOTE: Update the path below with the output of the command above.
 #         |
 #         |
 #         V
@@ -269,26 +277,35 @@ The keymaps shown in this README are not set in stone. You can change the keys t
 The only thing that matters is that your Neovim and tmux keymaps invoke the same actions on the same
 keystrokes so the experience feels seamless.
 
-For example, if you wanted `<A-h>` to move the left border to the left by 10 columns instead of the default 3,
-update both sides:
+For example, if you wanted `<A-H>`, `<A-J>`, `<A-K>`, `<A-L>` to instead move the opposite border
+in the same direction as their unshifted counterparts you could update both sides to be:
 
 **Tmux:**
 ```sh
 #  Key intercepted by tmux                                                             Move border amount
 #             |                                                                                 |
 #             V                                                                                 V
-bind-key -n 'M-h' if-shell "$is_vim" 'send-keys M-h' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT h -10'"
-#                                                ^
-#                                                |
-#                                     Key sent to vim if currently in vim window
+bind-key -n 'M-H' if-shell "$is_vim" 'send-keys M-H' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT l -3'"
+bind-key -n 'M-J' if-shell "$is_vim" 'send-keys M-J' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT k -1'"
+bind-key -n 'M-K' if-shell "$is_vim" 'send-keys M-K' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT j  1'"
+bind-key -n 'M-L' if-shell "$is_vim" 'send-keys M-L' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT h  3'"
+#                                                ^                                           ^
+#                                                |                                           |
+#                     Key sent to nvim if currently in nvim window                        Command
 ```
 
 **Neovim:**
 ```lua
---          Key intercepted by nvim               Move border amount
---                     |                                   |
---                     V                                   V
-vim.keymap.set('n', '<A-h>', '<cmd>NvimTmuxMoveLeftBorder -10<cr>')
+--          Key intercepted by nvim                 Move border amount
+--                     |                                     |
+--                     V                                     V
+vim.keymap.set('n', '<A-H>', '<cmd>NvimTmuxMoveRightBorder  -3<cr>')
+vim.keymap.set('n', '<A-J>', '<cmd>NvimTmuxMoveTopBorder    -1<cr>')
+vim.keymap.set('n', '<A-K>', '<cmd>NvimTmuxMoveBottomBorder  1<cr>')
+vim.keymap.set('n', '<A-L>', '<cmd>NvimTmuxMoveLeftBorder    3<cr>')
+--                                        ^
+--                                        |
+--                                     Command
 ```
 
 As long as both sides agree on the key and the action, everything will work.
@@ -300,3 +317,7 @@ As long as both sides agree on the key and the action, everything will work.
 ## License
 
 MIT
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
