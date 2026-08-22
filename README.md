@@ -99,9 +99,9 @@ we'll need to configure both ends in order to get things working.
 This plugin requires configuration in both tmux and Neovim because they each
 handle keybindings separately and our goal is to provide a unified experience:
 
-- **Tmux side**: Tmux intercepts all keypresses first. The tmux configuration detects if the active pane
-is running Neovim, and if so, passes the keypress through to Neovim. Otherwise, tmux handles the
-navigation/resize itself.
+- **Tmux side**: Tmux intercepts all keypresses first. The tmux configuration checks the
+`@pane-is-vim` flag that the Neovim plugin sets on the pane, and if it is set, passes the keypress
+through to Neovim. Otherwise, tmux handles the navigation/resize itself.
 - **Neovim side**: The plugin needs to be installed so Neovim can handle navigation/resize commands and
 communicate with tmux when you're at a window edge.
 
@@ -236,31 +236,80 @@ Add this configuration to your `~/.tmux.conf`:
 #                           V
 NVIM_TMUX_RESIZE_SCRIPT="$HOME/.local/share/nvim/lazy/nvim-tmux-wm/scripts/resize_tmux_pane.sh"
 
-is_vim="ps -o state= -o comm= -t '#{pane_tty}' | grep -iqE '^[^TXZ ]+ +(\\S+\\/)?g?(view|l?n?vim?x?|fzf)(diff)?$'"
+# Set on the pane by the Neovim plugin. See "How Tmux Detects Neovim" below.
+is_vim="#{@pane-is-vim}"
 
 # Navigation bindings
-bind-key -n 'C-h' if-shell "$is_vim" 'send-keys C-h' 'select-pane -L'
-bind-key -n 'C-j' if-shell "$is_vim" 'send-keys C-j' 'select-pane -D'
-bind-key -n 'C-k' if-shell "$is_vim" 'send-keys C-k' 'select-pane -U'
-bind-key -n 'C-l' if-shell "$is_vim" 'send-keys C-l' 'select-pane -R'
+bind-key -n 'C-h' if-shell -F "$is_vim" 'send-keys C-h' 'select-pane -L'
+bind-key -n 'C-j' if-shell -F "$is_vim" 'send-keys C-j' 'select-pane -D'
+bind-key -n 'C-k' if-shell -F "$is_vim" 'send-keys C-k' 'select-pane -U'
+bind-key -n 'C-l' if-shell -F "$is_vim" 'send-keys C-l' 'select-pane -R'
 bind-key -T copy-mode-vi 'C-h' select-pane -L
 bind-key -T copy-mode-vi 'C-j' select-pane -D
 bind-key -T copy-mode-vi 'C-k' select-pane -U
 bind-key -T copy-mode-vi 'C-l' select-pane -R
 
 # Resize bindings
-bind-key -n 'M-h' if-shell "$is_vim" 'send-keys M-h' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT h -3'"
-bind-key -n 'M-H' if-shell "$is_vim" 'send-keys M-H' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT h  3'"
-bind-key -n 'M-j' if-shell "$is_vim" 'send-keys M-j' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT j -1'"
-bind-key -n 'M-J' if-shell "$is_vim" 'send-keys M-J' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT j  1'"
-bind-key -n 'M-k' if-shell "$is_vim" 'send-keys M-k' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT k  1'"
-bind-key -n 'M-K' if-shell "$is_vim" 'send-keys M-K' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT k -1'"
-bind-key -n 'M-l' if-shell "$is_vim" 'send-keys M-l' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT l  3'"
-bind-key -n 'M-L' if-shell "$is_vim" 'send-keys M-L' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT l -3'"
+bind-key -n 'M-h' if-shell -F "$is_vim" 'send-keys M-h' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT h -3'"
+bind-key -n 'M-H' if-shell -F "$is_vim" 'send-keys M-H' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT h  3'"
+bind-key -n 'M-j' if-shell -F "$is_vim" 'send-keys M-j' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT j -1'"
+bind-key -n 'M-J' if-shell -F "$is_vim" 'send-keys M-J' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT j  1'"
+bind-key -n 'M-k' if-shell -F "$is_vim" 'send-keys M-k' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT k  1'"
+bind-key -n 'M-K' if-shell -F "$is_vim" 'send-keys M-K' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT k -1'"
+bind-key -n 'M-l' if-shell -F "$is_vim" 'send-keys M-l' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT l  3'"
+bind-key -n 'M-L' if-shell -F "$is_vim" 'send-keys M-L' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT l -3'"
 ####################
 # end nvim-tmux-wm #
 ####################
 ```
+
+### How Tmux Detects Neovim
+
+Tmux sees the keypress before Neovim does, so it needs a way to ask "is this pane running Neovim?"
+before deciding whether to act on the key or forward it.
+
+The Neovim plugin answers that question directly: on startup it sets a `@pane-is-vim` option on its
+own tmux pane, and clears it on exit. The tmux bindings above then test that flag with
+`if-shell -F "$is_vim"`, which is a plain format expansion — no subprocess involved.
+
+The common alternative, used by most plugins in this space, is to inspect the pane's process list on
+every keypress:
+
+```sh
+is_vim="ps -o state= -o comm= -t '#{pane_tty}' | grep -iqE '^[^TXZ ]+ +(\\S+\\/)?g?(view|l?n?vim?x?|fzf)(diff)?$'"
+```
+
+Setting the flag from Neovim is preferable for two reasons:
+
+- **It's correct more often.** The `ps` check greps the names of the processes on the pane's tty
+  against a hardcoded pattern, so it breaks whenever Neovim isn't on that tty under a name the
+  pattern happens to match. Over `ssh` or inside a container the local process is `ssh`/`docker`,
+  not `nvim`. A wrapped binary such as Nix's `.nvim-wrapped` doesn't match the pattern either. In
+  both cases the pane silently stops forwarding keys, with nothing to indicate why. A flag set by
+  the running Neovim instance itself can't be fooled this way.
+- **It's cheaper.** The `ps` version forks `ps` and `grep` on *every* `<C-h>`/`<C-j>`/`<C-k>`/`<C-l>`
+  press, which are among the most frequently hit keys in this workflow. Reading a pane option costs
+  nothing.
+
+Requires tmux 3.0 or newer for pane-scoped user options. The flag is set on `VimEnter`/`VimResume`,
+cleared on `VimLeave`/`VimSuspend`, and re-asserted on `FocusGained` so it recovers if something
+else clears it.
+
+> **Note:** If you install with lazy.nvim, don't give the plugin a `cmd`, `keys`, or `event`
+> lazy-loading trigger. The plugin has to load at startup in order to set the flag; otherwise tmux
+> won't know Neovim is running until you happen to trigger the plugin some other way.
+
+> **Note:** The `ps` pattern above also matches `fzf`, so it forwards `<C-h>`/`<C-j>`/`<C-k>`/`<C-l>`
+> to a bare `fzf` running in a shell pane. The `@pane-is-vim` flag only covers Neovim. If you rely on
+> those keys inside standalone `fzf`, keep a process check for that case:
+>
+> ```sh
+> is_vim="#{@pane-is-vim}"
+> is_fzf="ps -o state= -o comm= -t '#{pane_tty}' | grep -iqE '^[^TXZ ]+ +(\\S+\\/)?fzf$'"
+> bind-key -n 'C-h' if-shell -F "$is_vim" 'send-keys C-h' "if-shell '$is_fzf' 'send-keys C-h' 'select-pane -L'"
+> ```
+>
+> (`fzf` inside a Neovim terminal buffer is already covered, since the pane is Neovim.)
 
 ## Modifying Keymaps
 
@@ -276,10 +325,10 @@ in the same direction as their unshifted counterparts you could update both side
 #  Key intercepted by tmux                                                             Move border amount
 #             |                                                                                 |
 #             V                                                                                 V
-bind-key -n 'M-H' if-shell "$is_vim" 'send-keys M-H' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT l -3'"
-bind-key -n 'M-J' if-shell "$is_vim" 'send-keys M-J' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT k -1'"
-bind-key -n 'M-K' if-shell "$is_vim" 'send-keys M-K' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT j  1'"
-bind-key -n 'M-L' if-shell "$is_vim" 'send-keys M-L' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT h  3'"
+bind-key -n 'M-H' if-shell -F "$is_vim" 'send-keys M-H' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT l -3'"
+bind-key -n 'M-J' if-shell -F "$is_vim" 'send-keys M-J' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT k -1'"
+bind-key -n 'M-K' if-shell -F "$is_vim" 'send-keys M-K' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT j  1'"
+bind-key -n 'M-L' if-shell -F "$is_vim" 'send-keys M-L' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT h  3'"
 #                                                ^                                           ^
 #                                                |                                           |
 #                     Key sent to nvim if currently in nvim window                        Command

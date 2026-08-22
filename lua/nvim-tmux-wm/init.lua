@@ -37,14 +37,25 @@ T.move_border = function(border_side, amount)
     local script_path = debug.getinfo(1, "S").source:sub(2):match("(.*/)") .. "../../scripts/resize_tmux_pane.sh"
     os.execute(string.format("tmux run-shell -b '%s %s %d' 2>/dev/null", script_path, border_side, amount))
   else
-    -- Nvim window exists at this border, resize within nvim
-    local is_horizontal_border = (border_side == 'j' or border_side == 'k')
-    local resize_type = is_horizontal_border and '' or 'vertical '
-    -- For vertical borders (h/l): positive=right(+), negative=left(-)
-    -- For horizontal borders (j/k): positive=up(-), negative=down(+) — flipped because vim resize +N grows downward
-    local sign = is_horizontal_border and (amount > 0 and '-' or '+') or (amount > 0 and '+' or '-')
+    -- Nvim window exists at this border, resize within nvim.
+    --
+    -- Move the border itself rather than growing/shrinking the current window. `resize` and
+    -- `vertical resize` grow the window and let vim decide which neighbour donates the space,
+    -- so the *opposite* border moves whenever the neighbour on the intended side can't give any
+    -- up — it has 'winfixwidth'/'winfixheight' set, or is already at its minimum size.
+    -- win_move_separator/win_move_statusline move one specific border, as if dragged by the mouse.
+    --
+    -- Both functions move the bottom/right border of the window they are given, so to move the
+    -- left/top border we address the neighbour on that side instead.
     local target_winnr = (border_side == 'h' or border_side == 'k') and border_winnr or current_winnr
-    vim.fn.win_execute(vim.fn.win_getid(target_winnr), string.format('silent! %sresize %s%d', resize_type, sign, math.abs(amount)))
+    local target_winid = vim.fn.win_getid(target_winnr)
+    if border_side == 'h' or border_side == 'l' then
+      -- positive=right, negative=left — same direction convention as win_move_separator
+      vim.fn.win_move_separator(target_winid, amount)
+    else
+      -- positive=up, negative=down — inverted, win_move_statusline treats positive as down
+      vim.fn.win_move_statusline(target_winid, -amount)
+    end
   end
 end
 
