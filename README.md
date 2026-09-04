@@ -270,7 +270,7 @@ before deciding whether to act on the key or forward it.
 
 The Neovim plugin answers that question directly: on startup it sets a `@pane-is-vim` option on its
 own tmux pane, and clears it on exit. The tmux bindings above then test that flag with
-`if-shell -F "$is_vim"`, which is a plain format expansion — no subprocess involved.
+`if-shell -F "$is_vim"`, which is a plain format expansion (no subprocess involved).
 
 The common alternative, used by most plugins in this space, is to inspect the pane's process list on
 every keypress:

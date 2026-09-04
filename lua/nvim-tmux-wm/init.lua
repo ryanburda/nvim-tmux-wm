@@ -42,7 +42,7 @@ T.move_border = function(border_side, amount)
     -- Move the border itself rather than growing/shrinking the current window. `resize` and
     -- `vertical resize` grow the window and let vim decide which neighbour donates the space,
     -- so the *opposite* border moves whenever the neighbour on the intended side can't give any
-    -- up — it has 'winfixwidth'/'winfixheight' set, or is already at its minimum size.
+    -- up: it has 'winfixwidth'/'winfixheight' set, or is already at its minimum size.
     -- win_move_separator/win_move_statusline move one specific border, as if dragged by the mouse.
     --
     -- Both functions move the bottom/right border of the window they are given, so to move the
@@ -50,10 +50,10 @@ T.move_border = function(border_side, amount)
     local target_winnr = (border_side == 'h' or border_side == 'k') and border_winnr or current_winnr
     local target_winid = vim.fn.win_getid(target_winnr)
     if border_side == 'h' or border_side == 'l' then
-      -- positive=right, negative=left — same direction convention as win_move_separator
+      -- positive=right, negative=left; same direction convention as win_move_separator
       vim.fn.win_move_separator(target_winid, amount)
     else
-      -- positive=up, negative=down — inverted, win_move_statusline treats positive as down
+      -- positive=up, negative=down; inverted, win_move_statusline treats positive as down
       vim.fn.win_move_statusline(target_winid, -amount)
     end
   end
