@@ -53,7 +53,12 @@ zoomed=${info%% *}
 
 layout=${info#* }
 layout=${layout%% *}
-layout=${layout#*,}                       # strip the leading checksum
+# tmux >= 3.8 describes layouts as JSON ({"V":2,"L":{...}}); older versions use
+# "checksum,WxH,x,y{...}". The JSON form has no checksum to strip.
+case $layout in
+  '{'*) ;;
+  *) layout=${layout#*,} ;;               # strip the leading checksum
+esac
 active_pane=${info##* }
 active_pane=${active_pane#%}              # pane number without the '%'
 
@@ -99,6 +104,73 @@ new_layout=$(awk -v layout="$layout" -v active="$active_pane" -v dir="$border_si
       paneid[i] = readnum()
     }
     return i
+  }
+
+  # Parser for tmux 3.8+ JSON layouts. Same tree as parse(), but each node is an
+  # object: {"t":"h|v|p","w":..,"h":..,"x":..,"y":..,"c":[children]} for
+  # containers ("h" = side by side, "v" = stacked) and panes carrying extra
+  # keys ("i", "I", "l", "a", ...) that select-layout needs back verbatim.
+  function jstring(  r) {
+    r = ""
+    pos++                               # opening quote
+    while (pos <= len && substr(s, pos, 1) != "\"") { r = r substr(s, pos, 1); pos++ }
+    pos++                               # closing quote
+    return r
+  }
+
+  function jparse(par,   i, key, c, k, v) {
+    i = ++n
+    parent[i] = par
+    type[i] = "pane"
+    pos++                               # skip "{"
+    while (1) {
+      key = jstring(); pos++            # skip ":"
+      c = substr(s, pos, 1)
+      if (c == "[") {
+        pos++
+        while (1) {
+          k = jparse(i)
+          nchild[i]++
+          child[i, nchild[i]] = k
+          childpos[k] = nchild[i]
+          if (substr(s, pos, 1) == ",") pos++
+          else break
+        }
+        pos++                           # skip "]"
+      } else {
+        if (c == "\"") v = "\"" jstring() "\""
+        else {
+          v = ""
+          while (pos <= len && substr(s, pos, 1) !~ /[,}]/) { v = v substr(s, pos, 1); pos++ }
+        }
+        if (key == "t")      { type[i] = v; gsub(/"/, "", type[i]) }
+        else if (key == "w") w[i] = v + 0
+        else if (key == "h") h[i] = v + 0
+        else if (key == "x") x[i] = v + 0
+        else if (key == "y") y[i] = v + 0
+        else {
+          extra[i] = extra[i] ",\"" key "\":" v
+          if (key == "I") { paneid[i] = v; gsub(/[^0-9]/, "", paneid[i]); paneid[i] += 0 }
+        }
+      }
+      if (substr(s, pos, 1) == ",") pos++
+      else break
+    }
+    pos++                               # skip "}"
+    if (nchild[i] > 0) type[i] = (type[i] == "h") ? "lr" : "tb"
+    else type[i] = "pane"
+    return i
+  }
+
+  function jserialize(i,   r, j) {
+    r = "{\"t\":\"" (type[i] == "pane" ? "p" : (type[i] == "lr" ? "h" : "v")) "\",\"w\":" w[i] ",\"h\":" h[i] ",\"x\":" x[i] ",\"y\":" y[i]
+    if (type[i] != "pane") {
+      r = r ",\"c\":["
+      for (j = 1; j <= nchild[i]; j++)
+        r = r (j > 1 ? "," : "") jserialize(child[i, j])
+      r = r "]"
+    }
+    return r extra[i] "}"
   }
 
   # Cell edges and size along the resize axis. "fwd" is the right/bottom
@@ -186,7 +258,14 @@ new_layout=$(awk -v layout="$layout" -v active="$active_pane" -v dir="$border_si
 
   BEGIN {
     s = layout; len = length(s); pos = 1; n = 0
-    root = parse(0)
+    json = (substr(s, 1, 1) == "{")
+    if (json) {
+      pos = index(s, "\"L\":") + 4
+      prefix = substr(s, 1, pos - 1)
+      root = jparse(0)
+    } else {
+      root = parse(0)
+    }
 
     axis = (dir == "h" || dir == "l") ? "lr" : "tb"
     forward = (dir == "l" || dir == "j")   # moving the right/bottom border
@@ -243,6 +322,10 @@ new_layout=$(awk -v layout="$layout" -v active="$active_pane" -v dir="$border_si
     }
 
     offsets(root, 0, 0)
+    if (json) {
+      print prefix jserialize(root) "}"
+      exit
+    }
     body = serialize(root)
 
     # tmux layout checksum: 16-bit rotate-right and add over the body.
